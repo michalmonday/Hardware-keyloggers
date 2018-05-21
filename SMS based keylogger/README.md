@@ -6,6 +6,7 @@ Comparing to the original [KEYVILBOARD](https://github.com/helmmen/KEYVILBOARD) 
 -passing of raw HID reports instead of reinterpretting the keys before sending them to PC which solves multiple issues like:  
 - key combinations not working  
 - unability to hold keys  
+
 -NPN transistor added to allow automatic resetting of the Sim800L if it misbehaves  
 -debugging and some error handling  
 -different wiring  
