@@ -66,72 +66,98 @@ void C_USBhost::SetMode(char mode){
 
 
 byte C_USBhost::GetKey() {
-  collectedAsciiValue = 0;
+  // many keys can be pressed at the same time but only 1 value can be returned
+  // so there's an array that holds up to 6 keys that were potentially pressed
+  // until that array is empty no communication with usbhost will occur
+  for(int i=0; i<6; i++){
+    if(collectedAsciiValues[i]){
+      byte val = collectedAsciiValues[i];
+      collectedAsciiValues[i] = 0;
+      return val;  
+    }
+  }
+  
   if (serial.available() > 0) {
     if (serial.available() == 63) {
       fullBufferFlag_preventHold = true; //P(F("OCCUPIED BUFFER BYTES (serial.available): ")); PL((int)serial.available());
     }
-    hidText[hbc] = serial.read(); hbc++;
-    IgnoreBytesIfUseless();                                       // decreases hbc if required
+    hidText[hbc++] = serial.read(); // hbc is hid bytes count (number of bytes that was read already from USBhost which sends something like 00-00-04-00-00-00-00-00a)
+    hbc = IgnoreBytesIfUseless(hbc);                                       // decreases hbc if required
 
     if (hbc == 26) {                                              // if the full string (25 bytes long) representing 8 HID values is received (e.g. "\n\r02-00-04-00-00-00-00-00")
       hidText[hbc] = 0;
-      ConvertInputToBytes();
-      Send_Report();
-      SaveTheKey();
+      ConvertInputToBytes(hidText, rawHID);
+      Send_Report(rawHID);
+      SaveTheKeys();
       CleanUpVars();
 
       FullBuffer_BugPrevention();
     }
   }
-  return collectedAsciiValue;
+  return 0;
 }
 
 
 
-void C_USBhost::IgnoreBytesIfUseless() {
-  if ((hbc == 1 && hidText[hbc - 1] != 10) || (hbc == 2 && hidText[hbc - 1] != 13)) {
-    hbc--; // 2 bytes (10 and 13) are received before the string that includes raw HID info //P(F("hbc_VALUE: ")); P(hbc); P(", Char: "); PL(hidText[hbc-1]);
+byte C_USBhost::IgnoreBytesIfUseless(byte index) {
+  if ((index == 1 && hidText[index - 1] != 10) || (index == 2 && hidText[index - 1] != 13)) {
+    index--; // 2 bytes (10 and 13) are received before the string that includes raw HID info //P(F("hbc_VALUE: ")); P(hbc); P(", Char: "); PL(hidText[hbc-1]);
   }
+  return index;
 }
 
-void C_USBhost::ConvertInputToBytes() {
+void C_USBhost::ConvertInputToBytes(char* input, byte* raw_bytes) {
   for (byte j = 0; j < 8; j++) {
-    char buff[3] = {hidText[j * 2 + j + 2], hidText[j * 2 + j + 3], 0};  // convert string to 8 HID bytes
-    rawHID[j] = (byte)strtoul(buff, NULL, 16);
+    char buff[3] = {input[j * 2 + j + 2], input[j * 2 + j + 3], 0};  // convert string to 8 HID bytes
+    raw_bytes[j] = (byte)strtoul(buff, NULL, 16);
     memset(buff, 0, sizeof(buff));
   }
 }
 
-void C_USBhost::Send_Report() {
-  KeyReport kr = {rawHID[0], rawHID[1], {rawHID[2], rawHID[3], rawHID[4], rawHID[5], rawHID[6], rawHID[7]}};
+void C_USBhost::Send_Report(byte* bytes) {
+  KeyReport kr = {bytes[0], bytes[1], 
+    {
+      bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]
+    }
+  };
   HID().SendReport(2, &kr, sizeof(KeyReport)); /*PL(F("Report Sent."));*/
 }
 
 
-void C_USBhost::SaveTheKey(){
-  if(WasKeyPressed()){
-     byte key = GetKeyPressed();
-     if(key){
+void C_USBhost::SaveTheKeys(){
+  if(WasAnyKeyPressed()){
+    byte keys_pressed[6] = {0};
+    GetKeysPressed(keys_pressed);
 
-      if(debug){
-        Serial.print(F("\nrawHID string: ")); Serial.println(hidText);                                                                       // debug line
-        Serial.print(F("rawHID key detected: hex - ")); Serial.print(key, HEX); Serial.print(F(", int - ")); Serial.println((int)key);       // debug line
+    for(int i = 0; i < sizeof(keys_pressed); i++)
+    {
+       byte key = keys_pressed[i];
+       if(key){
+        if(debug){
+          Serial.print(F("\nrawHID string: ")); Serial.println(hidText);                                                                       // debug line
+          Serial.print(F("rawHID key detected: hex - ")); Serial.print(key, HEX); Serial.print(F(", int - ")); Serial.println((int)key);       // debug line
+        }
+        
+        byte asciiKey = HID_to_ASCII(key, WasShiftDown());
+        
+        
+        if(debug){Serial.print(F("Ascii key detected: hex - ")); Serial.print(asciiKey, HEX); Serial.print(F(", int - ")); Serial.print((int)asciiKey); Serial.print(F(", char - ")); Serial.println((char)asciiKey);}
+        
+        if(asciiKey){
+          collectedAsciiValues[i] = (char)asciiKey;
+        }
+        asciiKey = 0;
       }
-      
-      byte asciiKey = HID_to_ASCII(key, WasShiftDown());
-      
-      
-      if(debug){Serial.print(F("Ascii key detected: hex - ")); Serial.print(asciiKey, HEX); Serial.print(F(", int - ")); Serial.print((int)asciiKey); Serial.print(F(", char - ")); Serial.println((char)asciiKey);}
-      
-      if(asciiKey){
-        collectedAsciiValue = (char)asciiKey;
-      }
-      asciiKey = 0;
+      key = 0; 
     }
-    key = 0; 
   }
-  else if (WasModifierPressed()){} else{} // was released
+  else if (WasModifierPressed()){} 
+  else{
+    if(debug){
+        Serial.print(F("\nRELEASED_OR_LOST\nrawHID string: ")); Serial.println(hidText);                                                                       // debug line
+        //Serial.print(F("rawHID key detected: hex - ")); Serial.print(key, HEX); Serial.print(F(", int - ")); Serial.println((int)key);       // debug line
+    }
+  } // was released
 }
 
 byte C_USBhost::HID_to_ASCII(byte key, bool shiftDown){
@@ -148,26 +174,32 @@ byte C_USBhost::HID_to_ASCII(byte key, bool shiftDown){
 }
 
 
-bool C_USBhost::WasKeyPressed() {
+bool C_USBhost::WasAnyKeyPressed() {
   for (int i = 2; i < 8; i++) {
-    if (rawHID[i] == 0) {
-      return false;
-    } if (prevRawHID[i] == 0) {
+    if(!WasKeyPreviouslyPressed(rawHID[i])){
       return true;
     }
   } return false;
 }
 
-bool C_USBhost::WasModifierPressed() {
-  return (rawHID[0] > prevRawHID[0]);
+bool C_USBhost::WasKeyPreviouslyPressed(byte key){
+  for (int i = 2; i < 8; i++) {
+    if(prevRawHID[i] == key){
+      return true; 
+    }
+  } return false;
 }
 
-byte C_USBhost::GetKeyPressed() {
+bool C_USBhost::WasModifierPressed() {
+  return ((rawHID[0] > 0) && (rawHID[0] != prevRawHID[0]));
+}
+
+void C_USBhost::GetKeysPressed(byte* keys_pressed) {
   for (int i = 2; i < 8; i++) {
-    if (rawHID[i] > 0 && prevRawHID[i] == 0) {
-      return rawHID[i];
+    if (rawHID[i] > 0 && !WasKeyPreviouslyPressed(rawHID[i])) {
+      keys_pressed[i-2] = rawHID[i];
     }
-  } return 0;
+  }
 }
 
 bool C_USBhost::WasShiftDown() {

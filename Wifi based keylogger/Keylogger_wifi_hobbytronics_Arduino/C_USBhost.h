@@ -24,16 +24,17 @@ private:
   byte rawHID[8];                                                   // modifier_bit_map, manufacturer(ignore) , key1, key2, key3, key4, key5, key6
   byte prevRawHID[8];
   byte fullBufferFlag_preventHold;
-  byte collectedAsciiValue;
+  byte collectedAsciiValues[6];
 
-  void IgnoreBytesIfUseless();                             
-  void ConvertInputToBytes();                              
-  void Send_Report();         
-  void SaveTheKey();       
+  byte IgnoreBytesIfUseless(byte index);                             
+  void ConvertInputToBytes(char* input, byte* raw_bytes);                              
+  void Send_Report(byte* bytes);         
+  void SaveTheKeys();       
   byte HID_to_ASCII(byte key, bool shiftDown);                     
-  bool WasKeyPressed();                                    
+  bool WasAnyKeyPressed();      
+  bool WasKeyPreviouslyPressed(byte key);                              
   bool WasModifierPressed();                               
-  byte GetKeyPressed();                                    
+  void GetKeysPressed(byte* keys_pressed);                                    
   bool WasShiftDown();                                     
   bool IsBitHigh(byte byteToConvert, byte bitToReturn);              
   void CleanUpVars();                                      

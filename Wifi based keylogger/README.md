@@ -33,7 +33,7 @@ It has the same functionality as [wifi_keylogger](https://github.com/spacehuhn/w
 
 ![image-wiring](https://i.imgur.com/3HBcuRI.png)
 
--connect CJMCU Beetle to PC 
+-connect CJMCU Beetle to PC  
 -upload the "tools/Serial1_communication.ino" code to CJMCU Beetle using Arduino IDE (pick "Arduino Leonardo" board setting)  
 > It will allow to communicate with USB Host Mini V2 board, it will be used to set its baud rate to a higher one (default is 9600 and it will be set to 115200).  
 
