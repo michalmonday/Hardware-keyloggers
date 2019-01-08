@@ -1,5 +1,7 @@
 ![image-device](https://i.imgur.com/B8xKmBY.png)
 
+![image-wiring](https://i.imgur.com/Zm0vHTz.png)
+
 # Overview  
 Comparing to the original [KEYVILBOARD](https://github.com/helmmen/KEYVILBOARD) it has the following differences:  
 -Arduino Pro Micro 5V used instead of Teensy  
