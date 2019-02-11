@@ -1,4 +1,6 @@
-![image-device](https://i.imgur.com/B8xKmBY.png)
+![image-device](https://raw.githubusercontent.com/michalmonday/Hardware-keyloggers/master/images/pic.jpg)
+
+![image-device-2](https://raw.githubusercontent.com/michalmonday/Hardware-keyloggers/master/images/pic_2.jpg)
 
 ![image-wiring](https://i.imgur.com/Zm0vHTz.png)
 
