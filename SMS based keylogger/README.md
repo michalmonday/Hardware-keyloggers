@@ -5,7 +5,7 @@
 ![image-wiring](https://i.imgur.com/Zm0vHTz.png)
 
 # Overview  
-Comparing to the original [KEYVILBOARD](https://github.com/RedBulletTooling/KEYVILBOARD) it has the following differences:  
+Comparing to the original [KEYVILBOARD](https://github.com/RedBulletTooling/KEYVILBOARD) it had the following differences:  
 -Arduino Pro Micro 5V used instead of Teensy  
 -passing of raw HID reports instead of reinterpretting the keys before sending them to PC which solves multiple issues like:  
 - key combinations not working  
@@ -14,6 +14,8 @@ Comparing to the original [KEYVILBOARD](https://github.com/RedBulletTooling/KEYV
 -NPN transistor added to allow automatic resetting of the Sim800L if it misbehaves  
 -debugging and some error handling  
 -different wiring  
+
+**The KEYVILBOARD project was updated since this repository was created, it has fixed the key-combinations/key-holding issues and implemented some other cool features.**
  
 # Parts used:  
 -Arduino Pro Micro 5V 16Mhz  
