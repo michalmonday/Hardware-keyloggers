@@ -5,7 +5,7 @@
 ![image-wiring](https://i.imgur.com/Zm0vHTz.png)
 
 # Overview  
-Comparing to the original [KEYVILBOARD](https://github.com/helmmen/KEYVILBOARD) it has the following differences:  
+Comparing to the original [KEYVILBOARD](https://github.com/RedBulletTooling/KEYVILBOARD) it has the following differences:  
 -Arduino Pro Micro 5V used instead of Teensy  
 -passing of raw HID reports instead of reinterpretting the keys before sending them to PC which solves multiple issues like:  
 - key combinations not working  
@@ -47,4 +47,4 @@ Baud rates of both modules should be set correctly now and the main code (keylog
 
 
 # Credits  
-Thanks to [Helmmen](https://github.com/helmmen/KEYVILBOARD) for publishing the working prototype of keylogger that would use SMS communication and the cool Hobbytronics USB host board. That was the origin and the base for this project.  
+Thanks to [Helmmen](https://github.com/RedBulletTooling/KEYVILBOARD) for publishing the working prototype of keylogger that would use SMS communication and the cool Hobbytronics USB host board. That was the origin and the base for this project.  
